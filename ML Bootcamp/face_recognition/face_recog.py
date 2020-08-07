@@ -1,10 +1,9 @@
 import cv2
 import numpy as np
 from sklearn.neighbors import KNeighborsClassifier
+import dlib
 
 data = np.load("face_data.npy")
-
-print(data.shape, data.dtype)
 
 X = data[:, 1:].astype(int)
 y = data[:, 0]
@@ -14,16 +13,20 @@ model.fit(X, y)
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 
-detector = cv2.CascadeClassifier("../datasets/haarcascade_frontalface_default.xml")
+detector = dlib.get_frontal_face_detector()
 while True:
 
     ret, frame = cap.read()
 
     if ret:
-        faces = detector.detectMultiScale(frame)
+        faces = detector(frame)
 
         for face in faces:
-            x, y, w, h = face
+            x = face.left()
+            y = face.top()
+            w = face.right() - x
+            h = face.bottom() - y
+
             cut = frame[y:y + h, x:x + w]
             fix = cv2.resize(cut, (100, 100))
             gray = cv2.cvtColor(fix, cv2.COLOR_BGR2GRAY)
